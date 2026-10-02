@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Jurnal Layanan Bimbingan dan Konseling</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans">
+
+  <!-- Header Navigasi -->
+  <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center space-x-3">
+        <div class="bg-white/10 p-2 rounded-lg">
+          <i class="fa-solid fa-book-bookmark text-2xl text-amber-300"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">E-Jurnal Layanan BK</h1>
+          <p class="text-xs text-indigo-100">Bimbingan & Konseling Sekolah</p>
+        </div>
+      </div>
+      
+      <!-- Nav Tabs -->
+      <nav class="flex space-x-1 sm:space-x-2 text-sm font-medium">
+        <button onclick="switchTab('dashboard')" id="btnTabDashboard" class="px-3 py-2 rounded-md bg-indigo-900 text-white transition">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
+        </button>
+        <button onclick="switchTab('input')" id="btnTabInput" class="px-3 py-2 rounded-md hover:bg-indigo-600 transition">
+          <i class="fa-solid fa-pen-to-square mr-1"></i> Input Jurnal
+        </button>
+        <button onclick="switchTab('riwayat')" id="btnTabRiwayat" class="px-3 py-2 rounded-md hover:bg-indigo-600 transition">
+          <i class="fa-solid fa-list-check mr-1"></i> Riwayat Layanan
+        </button>
+        <button onclick="switchTab('pengaturan')" id="btnTabPengaturan" class="px-3 py-2 rounded-md hover:bg-indigo-600 transition">
+          <i class="fa-solid fa-gear mr-1"></i> Pengaturan
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- ALERT STATUS SCRIPT -->
+    <div id="gasWarning" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-md text-amber-800 text-sm flex justify-between items-center shadow-sm">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-circle-exclamation text-amber-600 text-lg"></i>
+        <span>URL Web App Google Apps Script belum dikonfigurasi. Masuk ke tab <strong>Pengaturan</strong> untuk menghubungkan Google Sheets.</span>
+      </div>
+      <button onclick="switchTab('pengaturan')" class="text-xs font-semibold underline text-amber-900 hover:text-amber-700">Atur Sekarang</button>
+    </div>
+
+    <!-- ==================== 1. TAB DASHBOARD ==================== -->
+    <section id="tabDashboard" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Layanan</p>
+            <h3 id="statTotal" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+          </div>
+          <div class="bg-indigo-50 text-indigo-600 p-3 rounded-lg"><i class="fa-solid fa-folder-open text-xl"></i></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Layanan Responsif</p>
+            <h3 id="statResponsif" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+          </div>
+          <div class="bg-emerald-50 text-emerald-600 p-3 rounded-lg"><i class="fa-solid fa-user-shield text-xl"></i></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Layanan Dasar</p>
+            <h3 id="statDasar" class="text-2xl font-bold text-sky-600 mt-1">0</h3>
+          </div>
+          <div class="bg-sky-50 text-sky-600 p-3 rounded-lg"><i class="fa-solid fa-chalkboard-user text-xl"></i></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Home Visit & Advokasi</p>
+            <h3 id="statDukungan" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+          </div>
+          <div class="bg-amber-50 text-amber-600 p-3 rounded-lg"><i class="fa-solid fa-house-user text-xl"></i></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Aktivitas Layanan Terakhir
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs border-b">
+              <tr>
+                <th class="p-3">Tanggal / Waktu</th>
+                <th class="p-3">Jenis Layanan</th>
+                <th class="p-3">Sasaran / Siswa</th>
+                <th class="p-3">Topik Masalah</th>
+                <th class="p-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardRecentBody" class="divide-y divide-slate-100">
+              <tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada rekaman layanan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. TAB INPUT JURNAL ==================== -->
+    <section id="tabInput" class="hidden bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm">
+      <div class="border-b pb-4 mb-6">
+        <h2 class="text-xl font-bold text-slate-800">Formulir Rekam Layanan BK</h2>
+        <p class="text-sm text-slate-500">Isi data pelaksanaan layanan bimbingan konseling secara lengkap.</p>
+      </div>
+
+      <form id="formJurnal" onsubmit="handleFormSubmit(event)" class="space-y-6">
+        <!-- Baris 1: Waktu & Konselor -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Pelaksanaan *</label>
+            <input type="date" id="inpTanggal" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Rentang Waktu (Mulai - Selesai) *</label>
+            <div class="flex items-center space-x-2">
+              <input type="time" id="inpMulai" required class="w-1/2 rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <span class="text-slate-400">-</span>
+              <input type="time" id="inpSelesai" required class="w-1/2 rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Guru BK / Konselor *</label>
+            <input type="text" id="inpKonselor" placeholder="Nama Guru BK" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Baris 2: Komponen, Bidang, Jenis Layanan -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Komponen Layanan *</label>
+            <select id="inpKomponen" onchange="handleKomponenChange()" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="">Pilih Komponen...</option>
+              <option value="Layanan Dasar">Layanan Dasar</option>
+              <option value="Layanan Responsif">Layanan Responsif</option>
+              <option value="Peminatan & Perencanaan Individual">Peminatan & Perencanaan Individual</option>
+              <option value="Dukungan Sistem">Dukungan Sistem</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Bidang Bimbingan *</label>
+            <select id="inpBidang" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="">Pilih Bidang...</option>
+              <option value="Pribadi">Pribadi</option>
+              <option value="Sosial">Sosial</option>
+              <option value="Belajar">Belajar</option>
+              <option value="Karier">Karier</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Layanan BK *</label>
+            <select id="inpJenisLayanan" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="">Pilih Komponen terlebih dahulu</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Baris 3: Sasaran & Nama Siswa -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tipe Sasaran *</label>
+            <select id="inpSasaranTipe" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="Individu">Individu (1 Siswa)</option>
+              <option value="Kelompok">Kelompok (Beberapa Siswa)</option>
+              <option value="Klasikal">Klasikal (1 Rombel/Kelas)</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Siswa / Rombel Sasaran *</label>
+            <input type="text" id="inpNamaSiswa" placeholder="Misal: Ahmad Dani (IX A) atau Kelas VIII B" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Baris 4: Topik & Detail Proses -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Topik / Bahasan Permasalahan *</label>
+            <input type="text" id="inpTopik" placeholder="Judul topik bimbingan atau indikasi permasalahan" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Uraian Ringkasan Dinamika Proses *</label>
+            <textarea id="inpProses" rows="3" placeholder="Gambarkan pendekatan konseling, respon siswa, pokok masalah..." required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Hasil Evaluasi & Rencana Tindak Lanjut *</label>
+            <textarea id="inpHasil" rows="2" placeholder="Komitmen konseli, evaluasi proses/hasil, keputusan..." required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Baris 5: Status & Lampiran -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Status Tindak Lanjut</label>
+            <select id="inpStatus" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="Selesai (Tuntas)">Selesai (Tuntas)</option>
+              <option value="Perlu Sesi Lanjutan">Perlu Sesi Lanjutan</option>
+              <option value="Alih Tangan Kasus (Referral)">Alih Tangan Kasus (Referral)</option>
+              <option value="Konferensi Kasus Terjadwal">Konferensi Kasus Terjadwal</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tautan Bukti / Lampiran (Google Drive)</label>
+            <input type="url" id="inpLampiran" placeholder="https://drive.google.com/..." class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t">
+          <button type="reset" class="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 text-sm font-semibold transition">Reset</button>
+          <button type="submit" id="btnSubmitForm" class="px-6 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-sm font-semibold shadow-sm transition flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Simpan ke Jurnal
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================== 3. TAB RIWAYAT LAYANAN ==================== -->
+    <section id="tabRiwayat" class="hidden space-y-4">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Daftar Rekaman Layanan BK</h2>
+          <p class="text-xs text-slate-500">Kelola dan telusuri rekaman layanan yang telah disimpan.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="refreshData()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+          </button>
+          <button onclick="window.print()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+            <i class="fa-solid fa-print"></i> Cetak Rekap
+          </button>
+        </div>
+      </div>
+
+      <!-- Area Tabel & Cetak -->
+      <div id="printableArea" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-4">
+        <div class="hidden print:block text-center mb-6">
+          <h1 class="text-xl font-bold">REKAPITULASI JURNAL LAYANAN BIMBINGAN DAN KONSELING</h1>
+          <p class="text-xs text-slate-500">Dokumen Arsip Pelaksanaan Program Layanan Siswa</p>
+          <hr class="my-2 border-slate-400">
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
+              <tr>
+                <th class="p-2.5">No</th>
+                <th class="p-2.5">Waktu</th>
+                <th class="p-2.5">Layanan</th>
+                <th class="p-2.5">Bidang</th>
+                <th class="p-2.5">Sasaran</th>
+                <th class="p-2.5">Topik & Dinamika Masalah</th>
+                <th class="p-2.5">Hasil / RTL</th>
+                <th class="p-2.5">Status</th>
+                <th class="p-2.5 no-print">Konselor</th>
+              </tr>
+            </thead>
+            <tbody id="riwayatTableBody" class="divide-y divide-slate-100">
+              <tr><td colspan="9" class="p-4 text-center text-slate-400">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. TAB PENGATURAN ==================== -->
+    <section id="tabPengaturan" class="hidden bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-6">
+      <div class="border-b pb-4">
+        <h2 class="text-lg font-bold text-slate-800">Koneksi Google Apps Script</h2>
+        <p class="text-xs text-slate-500">Hubungkan frontend Vercel ini dengan URL Web App Apps Script backend Anda.</p>
+      </div>
+
+      <div class="space-y-4 text-sm">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Web App URL (Akhiran /exec)</label>
+          <input type="url" id="inpScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <p class="text-xs text-slate-400 mt-1">Deploy Apps Script Anda sebagai Web App dengan akses: <em>Who has access: Anyone</em>.</p>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button onclick="saveSettings()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-xs shadow-sm transition">
+            Simpan Konfigurasi
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Referensi Pilihan Layanan Sesuai POP BK
+    const LAYANAN_OPTIONS = {
+      "Layanan Dasar": [
+        "Bimbingan Klasikal",
+        "Bimbingan Kelompok",
+        "Papan Bimbingan / Media Informasi",
+        "Pengembangan Kepribadian Mandiri"
+      ],
+      "Layanan Responsif": [
+        "Konseling Individual",
+        "Konseling Kelompok",
+        "Konsultasi (Guru/Wali)",
+        "Konferensi Kasus (Case Conference)",
+        "Advokasi Siswa",
+        "Alih Tangan Kasus (Referral)"
+      ],
+      "Peminatan & Perencanaan Individual": [
+        "Eksplorasi Minat & Karier",
+        "Konseling Peminatan Studi Lanjut",
+        "Perencanaan Karier & Transisi Kerja"
+      ],
+      "Dukungan Sistem": [
+        "Kunjungan Rumah (Home Visit)",
+        "Administrasi & Pengolahan Asesmen (AKPD/Sosiometri)",
+        "Rapat Koordinasi Layanan BK",
+        "Kolaborasi Stakeholder / Komite"
+      ]
+    };
+
+    // State Aplikasi
+    let currentJurnalData = [];
+    let SCRIPT_URL = localStorage.getItem("BK_SCRIPT_URL") || "";
+
+    // Inisialisasi
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("inpTanggal").value = new Date().toISOString().split("T")[0];
+      if (SCRIPT_URL) {
+        document.getElementById("inpScriptUrl").value = SCRIPT_URL;
+        refreshData();
+      } else {
+        document.getElementById("gasWarning").classList.remove("hidden");
+        loadMockData(); // Tampilkan contoh jika belum dikonfigurasi
+      }
+    });
+
+    // Pindah Tab
+    function switchTab(tabId) {
+      const tabs = ["dashboard", "input", "riwayat", "pengaturan"];
+      tabs.forEach(t => {
+        const tabEl = document.getElementById("tab" + capitalize(t));
+        const btnEl = document.getElementById("btnTab" + capitalize(t));
+        if (t === tabId) {
+          tabEl.classList.remove("hidden");
+          btnEl.classList.add("bg-indigo-900", "text-white");
+        } else {
+          tabEl.classList.add("hidden");
+          btnEl.classList.remove("bg-indigo-900", "text-white");
+        }
+      });
+    }
+
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // Dropdown Dinamis Komponen -> Jenis Layanan
+    function handleKomponenChange() {
+      const komp = document.getElementById("inpKomponen").value;
+      const selectLayanan = document.getElementById("inpJenisLayanan");
+      selectLayanan.innerHTML = '<option value="">Pilih Layanan...</option>';
+      if (LAYANAN_OPTIONS[komp]) {
+        LAYANAN_OPTIONS[komp].forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item;
+          opt.textContent = item;
+          selectLayanan.appendChild(opt);
+        });
+      }
+    }
+
+    // Simpan Pengaturan Script URL
+    function saveSettings() {
+      const val = document.getElementById("inpScriptUrl").value.trim();
+      if (!val) {
+        alert("Masukkan URL Web App Apps Script yang valid!");
+        return;
+      }
+      localStorage.setItem("https://script.google.com/macros/s/AKfycbwn-8Y0E0gOw7m2CAKf5YUyagFLJv6Ma1-byaOWlCzgtjB-pG3YJeUmoc8hgwuch4Qh/exec", val);
+      SCRIPT_URL = val;
+      document.getElementById("gasWarning").classList.add("hidden");
+      alert("Pengaturan tersimpan!");
+      refreshData();
+      switchTab("dashboard");
+    }
+
+    // Ambil Data Jurnal
+    async function refreshData() {
+      if (!SCRIPT_URL) return;
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=getJurnal`);
+        const json = await res.json();
+        if (json.status === "success") {
+          currentJurnalData = json.data || [];
+          renderAll();
+        }
+      } catch (err) {
+        console.error("Gagal mengambil data dari Google Sheets:", err);
+      }
+    }
+
+    // Kirim Data Formulir ke Google Apps Script
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmitForm");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
+      const payload = {
+        tanggal: document.getElementById("inpTanggal").value,
+        waktu_mulai: document.getElementById("inpMulai").value,
+        waktu_selesai: document.getElementById("inpSelesai").value,
+        guru_bk: document.getElementById("inpKonselor").value,
+        komponen: document.getElementById("inpKomponen").value,
+        bidang: document.getElementById("inpBidang").value,
+        jenis_layanan: document.getElementById("inpJenisLayanan").value,
+        sasaran_tipe: document.getElementById("inpSasaranTipe").value,
+        nama_siswa: document.getElementById("inpNamaSiswa").value,
+        topik_masalah: document.getElementById("inpTopik").value,
+        ringkasan_proses: document.getElementById("inpProses").value,
+        hasil_evaluasi: document.getElementById("inpHasil").value,
+        status_tindak_lanjut: document.getElementById("inpStatus").value,
+        url_lampiran: document.getElementById("inpLampiran").value
+      };
+
+      if (!SCRIPT_URL) {
+        // Simpan lokal sementara jika URL belum ada
+        currentJurnalData.unshift({ ...payload, id_jurnal: "LOCAL-" + Date.now() });
+        renderAll();
+        alert("Data tersimpan di penyimpanan lokal browser (URL GAS belum dihubungkan).");
+        finishSubmit();
+        return;
+      }
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "addJurnal", payload: payload })
+        });
+        const resJson = await res.json();
+        if (resJson.status === "success") {
+          alert("Jurnal Layanan Berhasil Disimpan!");
+          document.getElementById("formJurnal").reset();
+          refreshData();
+          switchTab("riwayat");
+        } else {
+          alert("Gagal menyimpan: " + resJson.message);
+        }
+      } catch (err) {
+        alert("Error menghubungi server Apps Script: " + err.message);
+      } finally {
+        finishSubmit();
+      }
+    }
+
+    function finishSubmit() {
+      const btn = document.getElementById("btnSubmitForm");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan ke Jurnal';
+    }
+
+    // Render Data ke UI
+    function renderAll() {
+      // 1. Update Statistik
+      document.getElementById("statTotal").textContent = currentJurnalData.length;
+      document.getElementById("statResponsif").textContent = currentJurnalData.filter(d => d.komponen === "Layanan Responsif").length;
+      document.getElementById("statDasar").textContent = currentJurnalData.filter(d => d.komponen === "Layanan Dasar").length;
+      document.getElementById("statDukungan").textContent = currentJurnalData.filter(d => d.komponen === "Dukungan Sistem").length;
+
+      // 2. Render Recent Dashboard
+      const recentBody = document.getElementById("dashboardRecentBody");
+      const recentItems = currentJurnalData.slice(0, 5);
+      if (recentItems.length === 0) {
+        recentBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada rekaman layanan.</td></tr>';
+      } else {
+        recentBody.innerHTML = recentItems.map(row => `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3 font-medium">${row.tanggal || '-'} <br><span class="text-xs text-slate-400">${row.waktu_mulai || ''} - ${row.waktu_selesai || ''}</span></td>
+            <td class="p-3"><span class="px-2 py-1 rounded text-xs bg-indigo-50 text-indigo-700 font-semibold">${row.jenis_layanan || '-'}</span></td>
+            <td class="p-3 text-slate-700 font-medium">${row.nama_siswa || '-'}</td>
+            <td class="p-3 text-slate-600">${row.topik_masalah || '-'}</td>
+            <td class="p-3"><span class="text-xs px-2 py-0.5 rounded-full ${getStatusBadge(row.status_tindak_lanjut)}">${row.status_tindak_lanjut || 'Selesai'}</span></td>
+          </tr>
+        `).join("");
+      }
+
+      // 3. Render Riwayat Table Lengkap
+      const riwayatBody = document.getElementById("riwayatTableBody");
+      if (currentJurnalData.length === 0) {
+        riwayatBody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-slate-400">Belum ada rekaman layanan.</td></tr>';
+      } else {
+        riwayatBody.innerHTML = currentJurnalData.map((row, idx) => `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-2.5 font-bold text-slate-500">${idx + 1}</td>
+            <td class="p-2.5 font-medium whitespace-nowrap">${row.tanggal || '-'}<br><span class="text-slate-400">${row.waktu_mulai || ''}</span></td>
+            <td class="p-2.5"><span class="font-semibold text-slate-800">${row.jenis_layanan || '-'}</span><br><span class="text-slate-400 text-[10px]">${row.komponen || ''}</span></td>
+            <td class="p-2.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 font-medium">${row.bidang || '-'}</span></td>
+            <td class="p-2.5 font-medium text-slate-800">${row.nama_siswa || '-'}</td>
+            <td class="p-2.5 max-w-xs"><strong>${row.topik_masalah || '-'}</strong><p class="text-slate-500 truncate">${row.ringkasan_proses || ''}</p></td>
+            <td class="p-2.5 max-w-xs text-slate-600">${row.hasil_evaluasi || '-'}</td>
+            <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-medium ${getStatusBadge(row.status_tindak_lanjut)}">${row.status_tindak_lanjut || '-'}</span></td>
+            <td class="p-2.5 no-print text-slate-500">${row.guru_bk || '-'}</td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    function getStatusBadge(status) {
+      if (!status) return "bg-slate-100 text-slate-600";
+      if (status.includes("Selesai")) return "bg-emerald-100 text-emerald-700";
+      if (status.includes("Lanjutan")) return "bg-amber-100 text-amber-700";
+      return "bg-rose-100 text-rose-700";
+    }
+
+    // Mock data untuk tampilan awal jika belum dihubungkan
+    function loadMockData() {
+      currentJurnalData = [
+        {
+          tanggal: new Date().toISOString().split("T")[0],
+          waktu_mulai: "08:00",
+          waktu_selesai: "08:45",
+          komponen: "Layanan Responsif",
+          bidang: "Belajar",
+          jenis_layanan: "Konseling Individual",
+          nama_siswa: "Rizky Ramadhan (IX A)",
+          topik_masalah: "Penurunan motivasi belajar pasca sakit",
+          ringkasan_proses: "Konseling dengan pendekatan SFBT mencari pengecualian keberhasilan masa lalu.",
+          hasil_evaluasi: "Siswa merancang jadwal belajar mandiri 30 menit per hari.",
+          status_tindak_lanjut: "Perlu Sesi Lanjutan",
+          guru_bk: "Guru BK"
+        }
+      ];
+      renderAll();
+    }
+  </script>
+</body>
+</html>
