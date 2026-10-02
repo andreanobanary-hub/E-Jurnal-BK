@@ -32,7 +32,7 @@
         </div>
       </div>
       
-      <!-- Nav Tabs (Menu Pengaturan Sudah Dihilangkan) -->
+      <!-- Nav Tabs -->
       <nav class="flex space-x-1 sm:space-x-2 text-sm font-medium">
         <button onclick="switchTab('dashboard')" id="btnTabDashboard" class="px-3 py-2 rounded-md bg-indigo-900 text-white transition">
           <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
@@ -302,8 +302,8 @@
   </main>
 
   <script>
-    // URL Web App Google Apps Script tertanam permanen
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwn-8Y0E0gOw7m2CAKf5YUyagFLJv6Ma1-byaOWlCzgtjB-p0U3aVfI_1e9912t_M4r/exec";
+    // URL Web App Google Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwn-8Y0E0gOw7m2CAKf5YUyagFLJv6Ma1-byaOWlCzgtjB-pG3YJeUmoc8hgwuch4Qh/exec";
 
     const LAYANAN_OPTIONS = {
       "Layanan Dasar": [
@@ -372,6 +372,18 @@
       }
     }
 
+    // Helper POST anti-CORS redirect issues
+    async function postToGas(dataObj) {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(dataObj)
+      });
+      return await res.json();
+    }
+
     async function refreshData() {
       try {
         const res = await fetch(`${SCRIPT_URL}?action=getJurnal`);
@@ -380,9 +392,13 @@
           currentJurnalData = json.data || [];
           displayedJurnalData = [...currentJurnalData];
           renderAll();
+        } else {
+          console.warn("Respon:", json.message);
+          renderAll();
         }
       } catch (err) {
         console.error("Gagal mengambil data dari Google Sheets:", err);
+        renderAll();
       }
     }
 
@@ -425,22 +441,18 @@
 
       try {
         const actionType = isEdit ? "updateJurnal" : "addJurnal";
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: actionType, payload: payload })
-        });
-        const resJson = await res.json();
+        const resJson = await postToGas({ action: actionType, payload: payload });
+        
         if (resJson.status === "success") {
           alert(isEdit ? "Jurnal berhasil diperbarui!" : "Jurnal berhasil disimpan!");
           cancelEditMode();
-          refreshData();
+          await refreshData();
           switchTab("riwayat");
         } else {
           alert("Gagal: " + resJson.message);
         }
       } catch (err) {
-        alert("Terjadi kesalahan: " + err.message);
+        alert("Terjadi kesalahan koneksi: " + err.message);
       } finally {
         finishSubmit();
       }
@@ -503,12 +515,7 @@
       if (!confirm("Apakah Anda yakin ingin menghapus data jurnal ini?")) return;
 
       try {
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "deleteJurnal", id_jurnal: id })
-        });
-        const json = await res.json();
+        const json = await postToGas({ action: "deleteJurnal", id_jurnal: id });
         if (json.status === "success") {
           alert("Data berhasil dihapus!");
           refreshData();
@@ -528,12 +535,7 @@
       }
 
       try {
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "resetAllJurnal" })
-        });
-        const json = await res.json();
+        const json = await postToGas({ action: "resetAllJurnal" });
         if (json.status === "success") {
           alert("Seluruh data jurnal berhasil dikosongkan!");
           refreshData();
